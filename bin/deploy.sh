@@ -5,6 +5,7 @@ fi
 
 elm-app build
 APP=$(basename $PWD)
+rm -r ../docs/$APP
 mv dist ../docs/$APP
 
 git reset
