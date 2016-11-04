@@ -1,0 +1,22 @@
+{
+  "name": "spreadsheet-info",
+  "version": "1.0.0",
+  "description": "Static info page fetching text from google spreadsheet",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/torgeir/fagdag-elm.git"
+  },
+  "author": "Emil Mork <emil.a.mork@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/torgeir/fagdag-elm/issues"
+  },
+  "homepage": "https://github.com/torgeir/fagdag-elm#readme"
+}
