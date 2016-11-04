@@ -1,4 +1,4 @@
-require('./styles/base.less');
+require('./bundle.css');
 
 var Elm = require('./Main.elm');
 var root  = document.getElementById('root');
