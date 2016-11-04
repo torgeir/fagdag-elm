@@ -6,14 +6,22 @@ import Task exposing (..)
 import Http exposing (..)
 
 
+type alias EventActor =
+    { display_login : String }
+
+
 type alias Event =
-    { id : String }
+    { id : String
+    , eventType : String
+    , created_at : String
+    , actor : EventActor
+    }
 
 
 type alias Entry =
-    { id : String
-    , user : User
+    { user : User
     , action : String
+    , timestamp : String
     }
 
 
@@ -34,16 +42,16 @@ users =
 
 
 initialEntries =
-    [ { id = "n-a", user = "torgeir", action = "forked <repo> to <forked-repo>" }
-    , { id = "n-a", user = "emilmork", action = "starred <repo>" }
-    ]
+    []
 
 
 entryView : Entry -> Html.Html Msg
 entryView entry =
     div []
-        [ text entry.id
+        [ text "@"
         , text entry.user
+        , text " "
+        , text entry.timestamp
         , text " "
         , text entry.action
         ]
@@ -66,9 +74,19 @@ decoder =
 
 decoderEvent : Json.Decoder Event
 decoderEvent =
-    Json.object1
+    Json.object4
         Event
         ("id" := Json.string)
+        ("type" := Json.string)
+        ("created_at" := Json.string)
+        ("actor" := decoderEventActor)
+
+
+decoderEventActor : Json.Decoder EventActor
+decoderEventActor =
+    Json.object1
+        EventActor
+        ("display_login" := Json.string)
 
 
 subscriptions : Model -> Sub Msg
@@ -78,9 +96,9 @@ subscriptions model =
 
 eventToEntry : Event -> Entry
 eventToEntry event =
-    { id = event.id
-    , action = ""
-    , user = ""
+    { action = event.eventType
+    , user = event.actor.display_login
+    , timestamp = event.created_at
     }
 
 
