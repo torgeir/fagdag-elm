@@ -1,4 +1,4 @@
-require('./main.css');
+require('./styles/base.less');
 
 var Elm = require('./Main.elm');
 var root  = document.getElementById('root');
@@ -9,7 +9,7 @@ window.showInfo = function(data) {
   var entries = content.map(function(e) {
     return {
       title: e.title.$t,
-      content: e.content.$t
+      content: e.content.$t.match(/.*?:(.*)/)[1]
     }
   });
   app.ports.entriesport.send(entries);
