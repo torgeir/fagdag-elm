@@ -38,11 +38,17 @@ type alias Users =
 
 
 users =
-    [ "torgeir", "emilmork" ]
+    [ "torgeir"
+    , "emilmork"
+    ]
 
 
 initialEntries =
     []
+
+
+initialModel =
+    { error = Nothing, entries = initialEntries }
 
 
 entryView : Entry -> Html.Html Msg
@@ -57,14 +63,20 @@ entryView entry =
         ]
 
 
+type alias ErrorMessage =
+    Maybe String
+
+
 type alias Model =
-    Entries
+    { error : ErrorMessage
+    , entries : Entries
+    }
 
 
 type Msg
     = String
-    | OkMsg (List Event)
-    | FailedMsg Http.Error
+    | FetchEventsResultMsg (List Event)
+    | FetchEventsFailedMsg Http.Error
 
 
 decoder : Json.Decoder (List Event)
@@ -102,11 +114,36 @@ eventToEntry event =
     }
 
 
+joinEntries : Entries -> Entries -> Entries
+joinEntries entries moreEntries =
+    entries
+        |> List.append moreEntries
+        |> List.sortBy .timestamp
+        |> List.reverse
+
+
+errorView : ErrorMessage -> List (Html.Html Msg)
+errorView error =
+    Maybe.withDefault []
+        (Maybe.map
+            (\errorText -> [ div [] [ text errorText ] ])
+            error
+        )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OkMsg eventList ->
-            ( (List.map eventToEntry eventList), Cmd.none )
+        FetchEventsFailedMsg error ->
+            let
+                errorText =
+                    (toString error)
+            in
+                Debug.log errorText
+                    ( { model | error = Just errorText }, Cmd.none )
+
+        FetchEventsResultMsg eventList ->
+            ( { model | entries = joinEntries model.entries (List.map eventToEntry eventList) }, Cmd.none )
 
         _ ->
             ( model, Cmd.none )
@@ -114,10 +151,34 @@ update msg model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( initialEntries, (Task.perform FailedMsg OkMsg (Http.get decoder "https://api.github.com/users/torgeir/events/public")) )
+    ( initialModel, fetchAllEvents )
 
 
 view : Model -> Html.Html Msg
 view model =
     div []
-        (List.map entryView model)
+        (List.append
+            (errorView model.error)
+            (List.map entryView model.entries)
+        )
+
+
+fetchAllEvents : Cmd Msg
+fetchAllEvents =
+    let
+        cmds =
+            List.map fetchUserEvents users
+    in
+        Cmd.batch cmds
+
+
+fetchUserEvents : String -> Cmd Msg
+fetchUserEvents user =
+    let
+        url =
+            "https://api.github.com/users/" ++ user ++ "/events/public"
+
+        request =
+            (Http.get decoder url)
+    in
+        (Task.perform FetchEventsFailedMsg FetchEventsResultMsg request)
