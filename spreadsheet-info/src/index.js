@@ -1,4 +1,4 @@
-require('./bundle.css');
+require('./main.css');
 
 var Elm = require('./Main.elm');
 var root  = document.getElementById('root');
@@ -14,3 +14,7 @@ window.showInfo = function(data) {
   });
   app.ports.entriesport.send(entries);
 }
+
+setInterval(function() {
+  window.location.reload()
+}, 1000 * 60 * 10);

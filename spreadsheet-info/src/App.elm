@@ -64,11 +64,11 @@ entryView entry =
   case entry of
     Just entry ->
         div [ class "entries-entry"] [
-          h2 [ class "entries-entry-title"] [ text entry.title ],
+          h2 [ class "entries-entry-title t-sectionHeader"] [ text entry.title ],
           h2 [ class "entries-entry-desc"] [ text entry.content]
           ]
     Nothing ->
-        h2 [] [text "Empty"]
+        h2 [] [text "Ops! Fant ingen informasjon"]
 
 port entriesport : (Decode.Value -> msg) -> Sub msg
 
