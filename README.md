@@ -2,8 +2,10 @@
 
 ## Collection of elm apps
 
-Create new apps in their own folder, using https://github.com/halfzebra/create-elm-app.
+- https://torgeir.github.io/fagdag-elm/github-events
+- https://torgeir.github.io/fagdag-elm/spreadsheet-info
 
+Create new apps in their own folder, using https://github.com/halfzebra/create-elm-app.
 
 ## How to deploy?
 
