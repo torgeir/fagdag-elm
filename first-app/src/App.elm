@@ -17,10 +17,11 @@ type Action
     | FetchEventsFailedAction Github.ApiError
 
 
-users : Entries.Users
+users : Entries.Usernames
 users =
     [ "torgeir"
     , "emilmork"
+    , "mikaelbr"
     ]
 
 
@@ -71,7 +72,9 @@ view model =
 
 eventToEntry : Github.Event -> Entries.Entry
 eventToEntry event =
-    { action = event.eventType
-    , user = event.actor.display_login
+    { action = event.action
+    , user = Entries.Profile event.actor.display_login event.actor.url
+    , avatar = event.actor.avatar_url
     , timestamp = event.created_at
+    , repo = Entries.Repo event.repo.name event.repo.url
     }
