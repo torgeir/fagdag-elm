@@ -8,6 +8,7 @@ module Github
         , EventActor
         , EventRepo
         , EventAction(..)
+        , PullRequest
         )
 
 import Http exposing (..)
@@ -88,26 +89,37 @@ type alias PullRequest =
 
 
 type alias Issue =
-    { issueNumber : Int
-    , action : String
+    { number : Int
     , url : String
     , title : String
     }
 
 
+type alias IssueAction =
+    { action : String
+    , issue : Issue
+    }
+
+
+type alias Comment =
+    { url : String
+    }
+
+
 type alias IssueComment =
-    { issueNumber : Int
-    , commentUrl : String
-    , url : String
+    { issue : Issue
+    , comment : Comment
     }
 
 
 type EventAction
     = EventActionPush EventActionPushPayload
     | EventActionFork
+    | EventActionPullRequestReviewComment Comment PullRequest
     | EventActionPullRequest PullRequest
     | EventActionIssueComment IssueComment
-    | EventActionIssue Issue
+    | EventActionIssue IssueAction
+    | EventActionCommitComment Comment
     | EventActionWatch
     | EventActionMember String String
     | EventActionCreate (Maybe String) String (Maybe String)
@@ -135,17 +147,37 @@ decoderEvent =
         ("repo" := decoderEventRepo)
 
 
+decoderPullRequest : Json.Decoder PullRequest
+decoderPullRequest =
+    (Json.object4 PullRequest
+        (Json.at [ "payload", "action" ] Json.string)
+        (Json.at [ "payload", "pull_request", "number" ] Json.int)
+        (Json.at [ "payload", "pull_request", "html_url" ] Json.string)
+        (Json.at [ "payload", "pull_request", "title" ] Json.string)
+    )
+
+
+decoderIssue : Json.Decoder Issue
+decoderIssue =
+    (Json.object3 Issue
+        (Json.at [ "payload", "issue", "number" ] Json.int)
+        (Json.at [ "payload", "issue", "html_url" ] Json.string)
+        (Json.at [ "payload", "issue", "title" ] Json.string)
+    )
+
+
+decoderComment : Json.Decoder Comment
+decoderComment =
+    Json.object1 Comment
+        (Json.at [ "payload", "comment", "html_url" ] Json.string)
+
+
 decoderEventAction : String -> Json.Decoder EventAction
 decoderEventAction type' =
     case type' of
         "PullRequestEvent" ->
             Json.object1 EventActionPullRequest
-                (Json.object4 PullRequest
-                    (Json.at [ "payload", "action" ] Json.string)
-                    (Json.at [ "payload", "pull_request", "number" ] Json.int)
-                    (Json.at [ "payload", "pull_request", "url" ] Json.string)
-                    (Json.at [ "payload", "pull_request", "title" ] Json.string)
-                )
+                decoderPullRequest
 
         "PushEvent" ->
             Json.object1 EventActionPush
@@ -160,21 +192,27 @@ decoderEventAction type' =
         "ForkEvent" ->
             Json.succeed EventActionFork
 
+        "PullRequestReviewCommentEvent" ->
+            Json.object2 EventActionPullRequestReviewComment
+                decoderComment
+                decoderPullRequest
+
+        "CommitCommentEvent" ->
+            Json.object1 EventActionCommitComment
+                decoderComment
+
         "IssueCommentEvent" ->
             Json.object1 EventActionIssueComment
-                (Json.object3 IssueComment
-                    (Json.at [ "payload", "issue", "number" ] Json.int)
-                    (Json.at [ "payload", "comment", "html_url" ] Json.string)
-                    (Json.at [ "payload", "issue", "html_url" ] Json.string)
+                (Json.object2 IssueComment
+                    decoderIssue
+                    decoderComment
                 )
 
         "IssuesEvent" ->
             Json.object1 EventActionIssue
-                (Json.object4 Issue
-                    (Json.at [ "payload", "issue", "number" ] Json.int)
+                (Json.object2 IssueAction
                     (Json.at [ "payload", "action" ] Json.string)
-                    (Json.at [ "payload", "issue", "html_url" ] Json.string)
-                    (Json.at [ "payload", "issue", "title" ] Json.string)
+                    decoderIssue
                 )
 
         "MemberEvent" ->

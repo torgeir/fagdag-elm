@@ -49,6 +49,18 @@ view entry =
         ]
 
 
+pullView : Github.PullRequest -> Html.Html t
+pullView pr =
+    a [ href pr.url ]
+        [ text
+            ("pull request #"
+                ++ (toString pr.number)
+                ++ " - "
+                ++ pr.title
+            )
+        ]
+
+
 description : Entry -> Html.Html t
 description entry =
     let
@@ -56,17 +68,17 @@ description entry =
             repoView entry.repo
     in
         case entry.action of
+            Github.EventActionPullRequestReviewComment comment pr ->
+                span []
+                    [ a [ href comment.url ] [ text "placed a review comment" ]
+                    , text " in "
+                    , pullView pr
+                    ]
+
             Github.EventActionPullRequest pr ->
                 span []
                     [ text (pr.action ++ " ")
-                    , a [ href pr.url ]
-                        [ text
-                            ("pull request #"
-                                ++ (toString pr.number)
-                                ++ " - "
-                                ++ pr.title
-                            )
-                        ]
+                    , pullView pr
                     , text " in "
                     , repo
                     ]
@@ -75,15 +87,15 @@ description entry =
                 span []
                     [ text "pushed to ", repo ]
 
-            Github.EventActionIssue issue ->
+            Github.EventActionIssue issueAction ->
                 span []
-                    [ text (issue.action ++ " ")
-                    , a [ href issue.url ]
+                    [ text (issueAction.action ++ " ")
+                    , a [ href issueAction.issue.url ]
                         [ text
                             ("issue #"
-                                ++ (toString issue.issueNumber)
+                                ++ (toString issueAction.issue.number)
                                 ++ " - "
-                                ++ issue.title
+                                ++ issueAction.issue.title
                             )
                         ]
                     , text " in "
@@ -92,15 +104,22 @@ description entry =
 
             Github.EventActionIssueComment issueComment ->
                 span []
-                    [ a [ href issueComment.commentUrl ] [ text "commented" ]
+                    [ a [ href issueComment.comment.url ] [ text "commented" ]
                     , text " on "
-                    , a [ href issueComment.url ]
+                    , a [ href issueComment.issue.url ]
                         [ text
                             ("issue #"
-                                ++ (toString issueComment.issueNumber)
+                                ++ (toString issueComment.issue.number)
                             )
                         ]
                     , text " in "
+                    , repo
+                    ]
+
+            Github.EventActionCommitComment comment ->
+                span []
+                    [ a [ href comment.url ] [ text "commented" ]
+                    , text " on a commit in "
                     , repo
                     ]
 
